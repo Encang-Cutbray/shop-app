@@ -13,8 +13,6 @@ class ProductItem extends StatelessWidget {
     );
   }
 
-  
-
   void addCartItem(CartProvider cart, Product product) {
     cart.addCart(product.id, product.price, product.title);
   }
@@ -44,10 +42,24 @@ class ProductItem extends StatelessWidget {
                 onPressed: () => product.toggleFavoriteStatus()),
           ),
           trailing: IconButton(
-            color: Theme.of(context).accentColor,
-            icon: Icon(Icons.shopping_cart),
-            onPressed: () => addCartItem(cart, product),
-          ),
+              color: Theme.of(context).accentColor,
+              icon: Icon(Icons.shopping_cart),
+              onPressed: () {
+                addCartItem(cart, product);
+                Scaffold.of(context).hideCurrentSnackBar();
+                Scaffold.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Added item to cart'),
+                    duration: Duration(seconds: 2),
+                    action: SnackBarAction(
+                      label: 'UNDO',
+                      onPressed: () {
+                        cart.removeSingleItem(product.id);
+                      },
+                    ),
+                  ),
+                );
+              }),
           title: Text(
             product.title,
             textAlign: TextAlign.center,
