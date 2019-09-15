@@ -5,9 +5,7 @@ import '../models/Cart.dart';
 class OrdersProvider with ChangeNotifier {
   List<Order> _order = [];
 
-  List<Order> get orders {
-    return [..._order];
-  }
+  List<Order> get orders => [..._order];
 
   void addOrder(List<Cart> cartProduct, double total) {
     _order.insert(

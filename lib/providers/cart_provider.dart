@@ -5,13 +5,9 @@ import 'dart:convert';
 class CartProvider with ChangeNotifier {
   Map<String, Cart> _cartItem = {};
 
-  Map<String, Cart> get cartItem {
-    return {..._cartItem};
-  }
+  Map<String, Cart> get cartItem => {..._cartItem};
 
-  int get countCartItem {
-    return _cartItem.length;
-  }
+  int get countCartItem => _cartItem.length;
 
   double get totalAmount {
     var total = 0.0;
@@ -47,7 +43,6 @@ class CartProvider with ChangeNotifier {
   }
 
   void removeItem(String productId) {
-    print(productId);
     _cartItem.remove(productId);
     notifyListeners();
   }
@@ -58,7 +53,6 @@ class CartProvider with ChangeNotifier {
   }
 
   void removeSingleItem(String productId) {
-    print(_cartItem[productId].quantity);
     if (!_cartItem.containsKey(productId)) {
       return;
     }
