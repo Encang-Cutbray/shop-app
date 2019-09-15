@@ -29,7 +29,7 @@ class ProductDetailScreen extends StatelessWidget {
               height: 10,
             ),
             Text(
-              'Rp. ${productsData.price}',
+              'Rp. ${productsData.price.toStringAsFixed(2)}',
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.grey,

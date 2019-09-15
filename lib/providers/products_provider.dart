@@ -20,9 +20,15 @@ class ProductsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Product findById(String id) => _items.firstWhere(
-        (prod) => prod.id == id,
-      );
+  void updateProduct(String id, Product newProduct) {
+    print('[on product provider updateProduct]$id');
+    print('[on product provider updateProduct] ${newProduct.title}');
+    final productIndex = _items.indexWhere((prod) => prod.id == id);
+    _items[productIndex] = newProduct;
+    notifyListeners();
+  }
+
+  Product findById(String id) => _items.firstWhere((prod) => prod.id == id);
 
   List<Product> get favoriteItems =>
       _items.where((product) => product.isFavorite).toList();

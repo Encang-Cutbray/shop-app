@@ -11,6 +11,30 @@ class ExampleForm extends StatefulWidget {
 class _ExampleFormState extends State<ExampleForm> {
   final _exampleForm = GlobalKey<FormState>();
 
+  int counter = 1;
+  // @override
+  // void initState() {
+  //   print('[Init state before] $counter');
+  //   counter++;
+  //   print('[Init state after] $counter');
+
+  //   super.initState();
+  // }
+
+  @override
+  void didChangeDependencies() {
+    print(counter);
+    setState(() {
+      print('[Counter before setState()] $counter');
+      counter++;
+      print('[Counter after setState()] $counter');
+    });
+    counter++;
+    print('[change the counter] $counter');
+    print('\n');
+    super.didChangeDependencies();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
