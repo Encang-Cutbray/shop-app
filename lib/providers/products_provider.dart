@@ -28,6 +28,11 @@ class ProductsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void deleteProduct(String id) {
+    _items.removeWhere((product) => product.id == id);
+    notifyListeners();
+  }
+
   Product findById(String id) => _items.firstWhere((prod) => prod.id == id);
 
   List<Product> get favoriteItems =>
