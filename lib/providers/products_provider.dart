@@ -9,6 +9,7 @@ class ProductsProvider with ChangeNotifier {
   List<Product> get items => [..._items];
 
   void addProduct(Product product) {
+    var url = 'https://flutter-shop-app-214.firebaseio.com/product.json';
     Product newProduct = Product(
       id: DateTime.now().toString(),
       title: product.title,
