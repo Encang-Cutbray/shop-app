@@ -12,11 +12,11 @@ class AddProductScreen extends StatefulWidget {
 
 class _AddProductScreenState extends State<AddProductScreen> {
   String _titleAppBar = 'Add Product';
-
   final _priceFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
   final _imageUrlController = TextEditingController();
   final _form = GlobalKey<FormState>();
+  var _isLoading = false;
 
   var _editProduct = Product(
     id: null,
@@ -51,8 +51,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
           'imageUrl': '',
         };
         _imageUrlController.text = _editProduct.imageUrl;
-        print('[addProductScreen] $productId');
-        print('[addProductScreen] $_editProduct');
       }
     }
     _isInit = false;
@@ -67,18 +65,33 @@ class _AddProductScreenState extends State<AddProductScreen> {
     super.dispose();
   }
 
+  void _setLoading(bool param) {
+    setState(() {
+      _isLoading = param;
+    });
+  }
+
   void _saveForm() {
     if (_form.currentState.validate()) {
+      _setLoading(true);
       _form.currentState.save();
+
       if (_editProduct.id != null) {
         Provider.of<ProductsProvider>(context, listen: false)
             .updateProduct(_editProduct.id, _editProduct);
+        _setLoading(false);
+        setState(() {
+          _isLoading = false;
+        });
       } else {
         Provider.of<ProductsProvider>(context, listen: false)
-            .addProduct(_editProduct);
+            .addProduct(_editProduct).catchError((onError) =>)
+            .then((result) {
+          print(result);
+          _setLoading(false);
+          Navigator.of(context).pop();
+        }).catchError(() {});
       }
-
-      Navigator.of(context).pop();
     }
   }
 
@@ -229,20 +242,24 @@ class _AddProductScreenState extends State<AddProductScreen> {
           )
         ],
       ),
-      body: Form(
-        key: _form,
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: ListView(
-            children: <Widget>[
-              fieldInputTitle(),
-              fieldInputPrice(),
-              fieldInputDescription(),
-              fieldInputImage(),
-            ],
-          ),
-        ),
-      ),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : Form(
+              key: _form,
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: ListView(
+                  children: <Widget>[
+                    fieldInputTitle(),
+                    fieldInputPrice(),
+                    fieldInputDescription(),
+                    fieldInputImage(),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }
