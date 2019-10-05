@@ -85,7 +85,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
         });
       } else {
         Provider.of<ProductsProvider>(context, listen: false)
-            .addProduct(_editProduct).catchError((onError) =>)
+            .addProduct(_editProduct)
+            .catchError((onError) => false)
             .then((result) {
           print(result);
           _setLoading(false);
