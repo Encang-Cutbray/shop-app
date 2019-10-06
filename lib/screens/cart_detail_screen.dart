@@ -3,29 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../providers/cart_provider.dart';
 import '../providers/orders_provider.dart';
-
 import '../widgets/cart_item.dart';
-import './order_screen.dart';
 
 class CartDetailScreen extends StatelessWidget {
   static const routeName = '/cart';
-
-  void addOrder(BuildContext context, cart) {
-    Provider.of<OrdersProvider>(context, listen: false)
-        .addOrder(cart.cartItem.values.toList(), cart.totalAmount);
-  }
-
-  void clearCart(CartProvider cart) {
-    cart.clear();
-  }
-
-  void toOrderDetail(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed(OrderScreen.routeName);
-  }
-
-  void toShop(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed('/');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,23 +32,7 @@ class CartDetailScreen extends StatelessWidget {
                   Chip(
                     label: Text('\Rp. ${cart.totalAmount.toStringAsFixed(2)}'),
                   ),
-                  FlatButton(
-                    child: Text(
-                      cart.cartItem.values.length == 0
-                          ? 'Shoping Now'
-                          : 'Order Now',
-                      style: TextStyle(color: Colors.purple),
-                    ),
-                    onPressed: () {
-                      if (cart.cartItem.values.length == 0) {
-                        toShop(context);
-                        return;
-                      }
-                      addOrder(context, cart);
-                      clearCart(cart);
-                      toOrderDetail(context);
-                    },
-                  )
+                  ButtonOrder(cart: cart)
                 ],
               ),
             ),
@@ -89,6 +54,76 @@ class CartDetailScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class ButtonOrder extends StatefulWidget {
+  const ButtonOrder({
+    Key key,
+    @required this.cart,
+  }) : super(key: key);
+
+  final CartProvider cart;
+
+  @override
+  _ButtonOrderState createState() => _ButtonOrderState();
+}
+
+class _ButtonOrderState extends State<ButtonOrder> {
+  var _isLoading = false;
+
+  _setLoading(bool param) {
+    setState(() {
+      _isLoading = param;
+    });
+  }
+
+  Widget showErrorDialog(BuildContext ctx, String errorMessage) {
+    return AlertDialog(
+      title: Text('An Error occurred !'),
+      content: Text(errorMessage),
+      actions: <Widget>[
+        FlatButton(
+          child: Text('Okay'),
+          onPressed: () => Navigator.of(ctx).pop(),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: _isLoading
+          ? CircularProgressIndicator()
+          : Text(
+              (widget.cart.totalAmount <= 0) ? 'Shop Now' : 'Order Now',
+              style: TextStyle(color: Colors.purple),
+            ),
+      onPressed: (widget.cart.totalAmount <= 0 || _isLoading)
+          ? null
+          : () async {
+              _setLoading(true);
+              try {
+                await Provider.of<OrdersProvider>(context, listen: false)
+                    .addOrder(
+                  widget.cart.cartItem.values.toList(),
+                  widget.cart.totalAmount,
+                );
+                _setLoading(false);
+                widget.cart.clear();
+              } catch (error) {
+                await showDialog(
+                  context: context,
+                  builder: (ctx) => showErrorDialog(
+                    ctx,
+                    error.toString(),
+                  ),
+                );
+                Navigator.of(context).pop();
+              }
+            },
     );
   }
 }

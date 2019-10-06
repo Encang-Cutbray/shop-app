@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/cart_provider.dart';
+import '../providers/products_provider.dart';
 import '../widgets/badge_widget.dart';
 import '../widgets/product_grid.dart';
 import '../widgets/app_drawer.dart';
@@ -19,13 +20,72 @@ class ProductsOverviewScreen extends StatefulWidget {
 }
 
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
+  var _showFavoritesOnly = false;
+  var _isInit = true;
+  var _isLoading = false;
+
+  @override
+  void initState() {
+    // Note Won't work
+    // Provider.of<ProductsProvider>(context).fetchAndSetProduct();
+
+    // Future.delayed(Duration.zero).then((_) {
+    //   Provider.of<ProductsProvider>(context).fetchAndSetProduct();
+    // });
+
+    super.initState();
+  }
+
+  Widget showErrorDialog(BuildContext ctx, String errorMessage) {
+    return AlertDialog(
+      title: Text('An Error occurred !'),
+      content: Text(errorMessage),
+      actions: <Widget>[
+        FlatButton(
+          child: Text('Okay'),
+          onPressed: () => Navigator.of(ctx).pop(),
+        ),
+      ],
+    );
+  }
+
+  void _setInit(bool param) {
+    setState(() {
+      _isInit = param;
+    });
+  }
+
+  void _setLoading(bool param) {
+    setState(() {
+      _isLoading = param;
+    });
+  }
+
+  @override
+  void didChangeDependencies() async {
+    if (_isInit) {
+      _setLoading(true);
+      try {
+        await Provider.of<ProductsProvider>(context)
+            .fetchAndSetProduct()
+            .then((_) => _setLoading(false));
+      } catch (error) {
+        showDialog(
+          context: context,
+          builder: (ctx) => showErrorDialog(ctx, error.toString()),
+        );
+      }
+    }
+    _setInit(false);
+    super.didChangeDependencies();
+  }
+
   void toCartDetail(BuildContext contex) {
     Navigator.of(contex).pushNamed(
       CartDetailScreen.routeName,
     );
   }
 
-  var _showFavoritesOnly = false;
   void filteredProduct(FilterOptions value) {
     setState(() {
       if (value == FilterOptions.Favorite) {
@@ -70,7 +130,11 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
         ],
       ),
       drawer: AppDrawer(),
-      body: ProductGrid(showFavorites: _showFavoritesOnly),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : ProductGrid(showFavorites: _showFavoritesOnly),
     );
   }
 }
