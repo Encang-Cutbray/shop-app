@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/HttpExcemption.dart';
+import '../models/HttpException.dart';
 import '../models/Product.dart';
 
 class ProductsProvider with ChangeNotifier {
