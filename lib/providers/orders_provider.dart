@@ -1,13 +1,18 @@
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:myshop/models/HttpException.dart';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
+import '../models/HttpException.dart';
 import '../models/Order.dart';
 import '../models/Cart.dart';
+import '../endpoint/endpoint_dev.dart';
 
 class OrdersProvider with ChangeNotifier {
-  final orderUrl = 'https://flutter-shop-app-214.firebaseio.com/order.json';
+  OrdersProvider(this.authToken);
+
+  final String authToken;
+
   List<Order> _order = [];
 
   List<Order> get orders => [..._order].reversed.toList();
@@ -17,9 +22,13 @@ class OrdersProvider with ChangeNotifier {
   }
 
   Future<void> fetchAndSetOrder() async {
+
     _order = [];
-    final response = await http.get(orderUrl);
+
+    final response = await http.get(EndpointDev.orders(authToken));
+
     final fetchOrder = json.decode(response.body);
+
     if (fetchOrder == null) {
       handleNullOrder();
     } else {
@@ -44,13 +53,16 @@ class OrdersProvider with ChangeNotifier {
           ),
         );
       });
+
       notifyListeners();
+
     }
   }
 
   Future<void> addOrder(List<Cart> cartProduct, double total) async {
     try {
       final timestamps = DateTime.now();
+
       final bodyOrder = json.encode({
         'amount': total,
         'dateTime': timestamps.toIso8601String(),
@@ -59,11 +71,16 @@ class OrdersProvider with ChangeNotifier {
                   'id': cartOrder.id,
                   'title': cartOrder.title,
                   'quatity': cartOrder.quantity,
-                  'price': cartOrder.price
+                  'price': cartOrder.price,
                 })
             .toList()
       });
-      final response = await http.post(orderUrl, body: bodyOrder);
+
+      final response = await http.post(
+        EndpointDev.orders(authToken),
+        body: bodyOrder,
+      );
+
       _order.insert(
         0,
         Order(
@@ -73,7 +90,9 @@ class OrdersProvider with ChangeNotifier {
           product: cartProduct,
         ),
       );
+
       notifyListeners();
+
     } catch (error) {
       notifyListeners();
       throw HttpException('Opss Sometings wrong, Could not process your order');

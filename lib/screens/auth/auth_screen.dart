@@ -1,8 +1,10 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
-import 'package:myshop/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+
+import '../../models/HttpException.dart';
+import '../../providers/auth_provider.dart';
 
 enum AuthMode { Signup, Login }
 
@@ -92,12 +94,32 @@ class AuthCard extends StatefulWidget {
 
 class _AuthCardState extends State<AuthCard> {
   final GlobalKey<FormState> _formKey = GlobalKey();
+
   AuthMode _authMode = AuthMode.Login;
+
   Map<String, String> _authData = {
     'email': '',
     'password': '',
   };
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('An error Occurred'),
+        content: Text(message),
+        actions: <Widget>[
+          FlatButton(
+            child: Text('Okey'),
+            onPressed: () => Navigator.of(context).pop(),
+          )
+        ],
+      ),
+    );
+  }
+
   var _isLoading = false;
+
   final _passwordController = TextEditingController();
 
   void _submit() async {
@@ -109,17 +131,36 @@ class _AuthCardState extends State<AuthCard> {
     setState(() {
       _isLoading = true;
     });
-    if (_authMode == AuthMode.Login) {
-      await Provider.of<AuthProvider>(context).signIn(
-        _authData['email'],
-        _authData['password'],
-      );
-    } else {
-      await Provider.of<AuthProvider>(context).signUp(
-        _authData['email'],
-        _authData['password'],
-      );
+
+    try {
+      if (_authMode == AuthMode.Login) {
+        await Provider.of<AuthProvider>(context).signIn(
+          _authData['email'],
+          _authData['password'],
+        );
+      } else {
+        await Provider.of<AuthProvider>(context).signUp(
+          _authData['email'],
+          _authData['password'],
+        );
+      }
+    } on HttpException catch (error) {
+      var errorMessage = 'Authenticate failed';
+      if (error.toString().contains('EMAIL_EXISTS')) {
+        errorMessage = 'The email address is already in use by another account';
+      } else if (error.toString().contains('OPERATION_NOT_ALLOWED')) {
+        errorMessage = 'Password sign-in is disabled for this project';
+      } else if (error.toString().contains('TOO_MANY_ATTEMPTS_TRY_LATER')) {
+        errorMessage = 'Blocked all requests from this device. Try again later';
+      } else {
+        errorMessage = 'Ops something went wrong. Try again later';
+      }
+      _showErrorDialog(errorMessage);
+    } catch (e) {
+      var errorMessage = 'Could not authenticate you,Please try again letter';
+      _showErrorDialog(errorMessage);
     }
+
     setState(() {
       _isLoading = false;
     });

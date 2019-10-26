@@ -7,6 +7,7 @@ import '../models/HttpException.dart';
 import '../endpoint/endpoint_dev.dart';
 
 class AuthProvider with ChangeNotifier {
+
   String _token;
   DateTime _expiryDate;
   String _userId;
@@ -14,9 +15,22 @@ class AuthProvider with ChangeNotifier {
   final urlSignup = EndpointDev.signup;
   final urlSignin = EndpointDev.signin;
 
+  bool get isAuth {
+    return userToken != null;
+  }
+
+  String get userToken {
+    if (_expiryDate != null &&
+        _expiryDate.isAfter(DateTime.now()) &&
+        _token != null) {
+      return _token;
+    }
+    return null;
+  }
+
   Future<void> _authenticate(String email, String password, String url) async {
     try {
-
+      
       final bodyAuth = json.encode({
         'email': email,
         'password': password,
@@ -30,11 +44,16 @@ class AuthProvider with ChangeNotifier {
         throw HttpException(responseData['error']['message']);
       }
 
-      print(responseData);
-      print(bodyAuth);
-
+      _token = responseData['idToken'];
+      _userId = responseData['localId'];
+      _expiryDate = DateTime.now().add(
+        Duration(
+          seconds: int.parse(responseData['expiresIn']),
+        ),
+      );
+      notifyListeners();
     } catch (error) {
-     throw HttpException(error.toString());
+      throw HttpException(error.toString());
     }
   }
 
@@ -43,7 +62,6 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> signIn(String email, String password) async {
-    print(urlSignin);
     return _authenticate(email, password, urlSignin);
   }
 }
