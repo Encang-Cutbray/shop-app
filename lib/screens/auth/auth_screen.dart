@@ -200,11 +200,11 @@ class _AuthCardState extends State<AuthCard> {
                 TextFormField(
                   decoration: InputDecoration(labelText: 'E-Mail'),
                   keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value.isEmpty || !value.contains('@')) {
-                      return 'Invalid email!';
-                    }
-                  },
+                  // validator: (value) {
+                  //   if (value.isEmpty || !value.contains('@')) {
+                  //     return 'Invalid email!';
+                  //   }
+                  // },
                   onSaved: (value) {
                     _authData['email'] = value;
                   },
@@ -213,11 +213,11 @@ class _AuthCardState extends State<AuthCard> {
                   decoration: InputDecoration(labelText: 'Password'),
                   obscureText: true,
                   controller: _passwordController,
-                  validator: (value) {
-                    if (value.isEmpty || value.length < 5) {
-                      return 'Password is too short!';
-                    }
-                  },
+                  // validator: (value) {
+                  //   if (value.isEmpty || value.length < 5) {
+                  //     return 'Password is too short!';
+                  //   }
+                  // },
                   onSaved: (value) {
                     _authData['password'] = value;
                   },

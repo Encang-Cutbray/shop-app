@@ -26,11 +26,12 @@ class OrderScreen extends StatelessWidget {
               return Center(child: CircularProgressIndicator());
             } else {
               return Consumer<OrdersProvider>(
-                  builder: (ctx, orderData, child) => ListView.builder(
-                        itemCount: orderData.orders.length,
-                        itemBuilder: (_, index) =>
-                            OrderItem(order: orderData.orders[index]),
-                      ));
+                builder: (ctx, orderData, child) => ListView.builder(
+                  itemCount: orderData.orders.length,
+                  itemBuilder: (_, index) =>
+                      OrderItem(order: orderData.orders[index]),
+                ),
+              );
             }
           }
         },

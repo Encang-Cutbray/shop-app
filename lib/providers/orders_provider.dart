@@ -9,9 +9,10 @@ import '../models/Cart.dart';
 import '../endpoint/endpoint_dev.dart';
 
 class OrdersProvider with ChangeNotifier {
-  OrdersProvider(this.authToken);
-
   final String authToken;
+  final String userId;
+
+  OrdersProvider(this.authToken, this.userId);
 
   List<Order> _order = [];
 
@@ -25,10 +26,10 @@ class OrdersProvider with ChangeNotifier {
 
     _order = [];
 
-    final response = await http.get(EndpointDev.orders(authToken));
+    final response = await http.get(EndpointDev.orders(authToken, userId));
 
     final fetchOrder = json.decode(response.body);
-
+   
     if (fetchOrder == null) {
       handleNullOrder();
     } else {
@@ -77,7 +78,7 @@ class OrdersProvider with ChangeNotifier {
       });
 
       final response = await http.post(
-        EndpointDev.orders(authToken),
+        EndpointDev.orders(authToken, userId),
         body: bodyOrder,
       );
 

@@ -7,25 +7,40 @@ import '../models/Product.dart';
 import '../endpoint/endpoint_dev.dart';
 
 class ProductsProvider with ChangeNotifier {
-  ProductsProvider(this.authToken);
-
   final String authToken;
+  final String userId;
+
+  ProductsProvider(this.authToken, this.userId);
 
   List<Product> _items = [];
 
   List<Product> get items => [..._items];
 
-  Future<void> fetchAndSetProduct() async {
+  Future<void> fetchAndSetProduct([bool filterBy = false]) async {
+    final urlFetchProduct = filterBy
+        ? EndpointDev.productsPerUser(authToken, userId)
+        : EndpointDev.allProducts(authToken);
+
     try {
       _items = [];
-      final fetchProduct = await http.get(EndpointDev.products(authToken));
+      final fetchProduct = await http.get(urlFetchProduct);
+
       final setProduct = json.decode(fetchProduct.body) as Map<String, dynamic>;
 
-      if(setProduct == null){
+      if (setProduct == null) {
         _items = [];
-         notifyListeners();
-         return;
+        notifyListeners();
+        return;
       }
+
+      final fetchFavoriteProduct = await http.get(
+        EndpointDev.userFavorite(
+          userId,
+          authToken,
+        ),
+      );
+
+      final setFavoriteProduct = json.decode(fetchFavoriteProduct.body);
 
       setProduct.forEach((indexProduct, productData) {
         _items.add(
@@ -35,7 +50,9 @@ class ProductsProvider with ChangeNotifier {
             description: productData['description'],
             price: productData['price'],
             imageUrl: productData['imageUrl'],
-            isFavorite: productData['isFavorite'],
+            isFavorite: setFavoriteProduct != null
+                ? setFavoriteProduct[indexProduct] ?? false
+                : false,
           ),
         );
         notifyListeners();
@@ -52,11 +69,13 @@ class ProductsProvider with ChangeNotifier {
         'price': product.price,
         'description': product.description,
         'imageUrl': product.imageUrl,
-        'isFavorite': product.isFavorite
+        'creatorId': userId
       });
 
-      final response =
-          await http.post(EndpointDev.products(authToken), body: dataBody);
+      final response = await http.post(
+        EndpointDev.allProducts(authToken),
+        body: dataBody,
+      );
 
       Product newProduct = Product(
         id: json.decode(response.body)['name'],
@@ -85,7 +104,8 @@ class ProductsProvider with ChangeNotifier {
       'imageUrl': newProduct.imageUrl,
     });
 
-    await http.patch(EndpointDev.updateOrDeleteProduct(id, authToken), body: bodyProduct);
+    await http.patch(EndpointDev.updateOrDeleteProduct(id, authToken),
+        body: bodyProduct);
 
     _items[productIndex] = newProduct;
 
@@ -102,7 +122,8 @@ class ProductsProvider with ChangeNotifier {
 
     notifyListeners();
 
-    final response = await http.delete(EndpointDev.updateOrDeleteProduct(id, authToken));
+    final response =
+        await http.delete(EndpointDev.updateOrDeleteProduct(id, authToken));
 
     if (response.statusCode >= 400) {
       _items.insert(existingIndexProduct, existingProduct);

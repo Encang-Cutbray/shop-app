@@ -14,6 +14,8 @@ class AuthProvider with ChangeNotifier {
 
   final urlSignup = EndpointDev.signup;
   final urlSignin = EndpointDev.signin;
+  final hardcodeEmail = 'moncos4@email.com';
+  final hardcodePassword = 'secret214';
 
   bool get isAuth {
     return userToken != null;
@@ -28,12 +30,16 @@ class AuthProvider with ChangeNotifier {
     return null;
   }
 
+  String get userId {
+    return _userId;
+  }
+
   Future<void> _authenticate(String email, String password, String url) async {
     try {
-      
+      print(email);
       final bodyAuth = json.encode({
-        'email': email,
-        'password': password,
+        'email': hardcodeEmail,
+        'password': hardcodePassword,
         'returnSecureToken': true,
       });
 
@@ -51,6 +57,7 @@ class AuthProvider with ChangeNotifier {
           seconds: int.parse(responseData['expiresIn']),
         ),
       );
+
       notifyListeners();
     } catch (error) {
       throw HttpException(error.toString());

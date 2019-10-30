@@ -27,14 +27,14 @@ class Product with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleFavoriteStatus(String authToken) async {
+  Future<void> toggleFavoriteStatus(String userId, String authToken) async {
     final oldStatus = isFavorite;
-
+    
     try {
       _setFavorite(!isFavorite);
-      final response = await http.patch(
-        EndpointDev.updateOrDeleteProduct(id, authToken),
-        body: json.encode({'isFavorite': isFavorite}),
+      final response = await http.put(
+        EndpointDev.userFavoriteProduct(userId, id, authToken),
+        body: json.encode(isFavorite),
       );
 
       if (response.statusCode >= 400) {
