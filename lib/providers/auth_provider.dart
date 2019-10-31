@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
@@ -11,9 +12,11 @@ class AuthProvider with ChangeNotifier {
   String _token;
   DateTime _expiryDate;
   String _userId;
+  Timer _authTimer;
 
   final urlSignup = EndpointDev.signup;
   final urlSignin = EndpointDev.signin;
+
   final hardcodeEmail = 'moncos4@email.com';
   final hardcodePassword = 'secret214';
 
@@ -58,6 +61,7 @@ class AuthProvider with ChangeNotifier {
         ),
       );
 
+      autoLogout();
       notifyListeners();
     } catch (error) {
       throw HttpException(error.toString());
@@ -70,5 +74,24 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> signIn(String email, String password) async {
     return _authenticate(email, password, urlSignin);
+  }
+
+  void logout() {
+    _token = null;
+    _expiryDate = null;
+    _userId = null;
+    if (_authTimer != null) {
+      _authTimer.cancel();
+      _authTimer = null;
+    }
+    notifyListeners();
+  }
+
+  void autoLogout(){ 
+    if (_authTimer != null) {
+      _authTimer.cancel();
+    }
+    final timeExpired = _expiryDate.difference(DateTime.now()).inSeconds;
+    Timer(Duration(seconds: timeExpired), logout);
   }
 }
