@@ -41,10 +41,11 @@ class AuthProvider with ChangeNotifier {
     try {
       print(email);
       final bodyAuth = json.encode({
-        'email': hardcodeEmail,
-        'password': hardcodePassword,
+        'email': email.isEmpty ? hardcodeEmail: email,
+        'password': password.isEmpty ? hardcodePassword :password,
         'returnSecureToken': true,
       });
+      print(bodyAuth);
 
       final response = await http.post(url, body: bodyAuth);
       final responseData = json.decode(response.body);
