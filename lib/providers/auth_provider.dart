@@ -35,7 +35,6 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> _authenticate(String email, String password, String url) async {
     try {
-      print(email);
       final bodyAuth = json.encode({
         'email': email,
         'password': password,
