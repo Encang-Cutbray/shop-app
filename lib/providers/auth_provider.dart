@@ -3,12 +3,12 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/HttpException.dart';
 import '../endpoint/endpoint_dev.dart';
 
 class AuthProvider with ChangeNotifier {
-
   String _token;
   DateTime _expiryDate;
   String _userId;
@@ -20,9 +20,7 @@ class AuthProvider with ChangeNotifier {
   final hardcodeEmail = 'moncos4@email.com';
   final hardcodePassword = 'secret214';
 
-  bool get isAuth {
-    return userToken != null;
-  }
+  bool get isAuth => userToken != null;
 
   String get userToken {
     if (_expiryDate != null &&
@@ -33,19 +31,16 @@ class AuthProvider with ChangeNotifier {
     return null;
   }
 
-  String get userId {
-    return _userId;
-  }
+  String get userId => _userId;
 
   Future<void> _authenticate(String email, String password, String url) async {
     try {
       print(email);
       final bodyAuth = json.encode({
-        'email': email.isEmpty ? hardcodeEmail: email,
-        'password': password.isEmpty ? hardcodePassword :password,
+        'email': email.isEmpty ? hardcodeEmail : email,
+        'password': password.isEmpty ? hardcodePassword : password,
         'returnSecureToken': true,
       });
-      print(bodyAuth);
 
       final response = await http.post(url, body: bodyAuth);
       final responseData = json.decode(response.body);
@@ -62,6 +57,7 @@ class AuthProvider with ChangeNotifier {
         ),
       );
 
+      rememberUserLogin();
       autoLogout();
       notifyListeners();
     } catch (error) {
@@ -69,13 +65,43 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> signUp(String email, String password) async {
-    return _authenticate(email, password, urlSignup);
+  Future<void> rememberUserLogin() async {
+    final pref = await SharedPreferences.getInstance();
+    final userLoginData = json.encode({
+      'token': _token,
+      'userId': _userId,
+      'expiryDate': _expiryDate.toIso8601String(),
+    });
+    pref.setString('userLoginData', userLoginData);
   }
 
-  Future<void> signIn(String email, String password) async {
-    return _authenticate(email, password, urlSignin);
+  Future<bool> tryAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if(!prefs.containsKey('userLoginData')){
+      return false;
+    }
+
+    final extactUserLoginData =json.decode(prefs.getString('userLoginData')) as Map<String, Object>;
+    final expiryDate = DateTime.parse(extactUserLoginData['expiryDate']);
+    if (expiryDate.isBefore(DateTime.now())) {
+      return false;
+    }
+
+    _token = extactUserLoginData['token'];
+    _userId = extactUserLoginData['userId'];
+    _expiryDate = expiryDate;
+    notifyListeners();
+    autoLogout();
+
+    return true;
   }
+
+  Future<void> signUp(String email, String password) async =>
+      _authenticate(email, password, urlSignup);
+
+  Future<void> signIn(String email, String password,) async =>
+      _authenticate(email, password, urlSignin);
 
   void logout() {
     _token = null;
@@ -86,9 +112,15 @@ class AuthProvider with ChangeNotifier {
       _authTimer = null;
     }
     notifyListeners();
+    clearUserLogin();
   }
 
-  void autoLogout(){ 
+  Future<void> clearUserLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+  }
+
+  void autoLogout() {
     if (_authTimer != null) {
       _authTimer.cancel();
     }
