@@ -6,8 +6,6 @@ import '../models/Product.dart';
 import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
 
-
-
 class ProductItem extends StatelessWidget {
   void toProductDetail(BuildContext contex, id) {
     Navigator.of(contex).pushNamed(
@@ -29,12 +27,18 @@ class ProductItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(5),
       child: GridTile(
         child: GestureDetector(
-          onTap: () => toProductDetail(context, product.id),
-          child: Image.network(
-            product.imageUrl,
-            fit: BoxFit.cover,
-          ),
-        ),
+            onTap: () => toProductDetail(context, product.id),
+            child: Hero(
+              tag: product.id,
+              child: FadeInImage(
+                placeholder:
+                    AssetImage('assets/images/product-placeholder.png'),
+                fit: BoxFit.cover,
+                image: NetworkImage(
+                  product.imageUrl,
+                ),
+              ),
+            )),
         footer: GridTileBar(
           backgroundColor: Colors.black87,
           leading: Consumer<Product>(
@@ -43,7 +47,8 @@ class ProductItem extends StatelessWidget {
                 icon: Icon(product.isFavorite
                     ? Icons.favorite
                     : Icons.favorite_border),
-                onPressed: () => product.toggleFavoriteStatus(authToken.userId, authToken.userToken)),
+                onPressed: () => product.toggleFavoriteStatus(
+                    authToken.userId, authToken.userToken)),
           ),
           trailing: IconButton(
               color: Theme.of(context).accentColor,
