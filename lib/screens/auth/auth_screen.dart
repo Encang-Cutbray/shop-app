@@ -108,30 +108,30 @@ class _AuthCardState extends State<AuthCard>
 
   AnimationController _animantionController;
 
-  Animation<Size> _heightAnimation;
+  Animation<Offset> _offsetConfrimPassword;
 
-/*
+  Animation<double> _opacityConfrimPassword;
+
   @override
   void initState() {
     super.initState();
+
     _animantionController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 300),
     );
 
-    _heightAnimation = Tween<Size>(
-      begin: Size(
-        double.infinity,
-        260,
+    _opacityConfrimPassword = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        curve: Curves.easeIn,
+        parent: _animantionController,
       ),
-      end: Size(
-        double.infinity,
-        320,
-      ),
-    ).animate(
+    );
+
+    _offsetConfrimPassword =
+        Tween<Offset>(end: Offset(0, 0), begin: Offset(0, -1.5)).animate(
       CurvedAnimation(parent: _animantionController, curve: Curves.easeOutQuad),
     );
-    // _heightAnimation.addListener(() => setState(() {}));
   }
 
   @override
@@ -139,7 +139,6 @@ class _AuthCardState extends State<AuthCard>
     super.dispose();
     _animantionController.dispose();
   }
-  */
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -206,12 +205,12 @@ class _AuthCardState extends State<AuthCard>
       setState(() {
         _authMode = AuthMode.Signup;
       });
-      // _animantionController.forward();
+      _animantionController.forward();
     } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
-      // _animantionController.reverse();
+      _animantionController.reverse();
     }
   }
 
@@ -243,6 +242,7 @@ class _AuthCardState extends State<AuthCard>
                 TextFormField(
                   decoration: InputDecoration(labelText: 'E-Mail'),
                   keyboardType: TextInputType.emailAddress,
+                  // Note: disable validation for testing
                   // validator: (value) {
                   //   if (value.isEmpty || !value.contains('@')) {
                   //     return 'Invalid email!';
@@ -256,6 +256,7 @@ class _AuthCardState extends State<AuthCard>
                   decoration: InputDecoration(labelText: 'Password'),
                   obscureText: true,
                   controller: _passwordController,
+                  // Note: disable validation for testing
                   // validator: (value) {
                   //   if (value.isEmpty || value.length < 5) {
                   //     return 'Password is too short!';
@@ -265,19 +266,33 @@ class _AuthCardState extends State<AuthCard>
                     _authData['password'] = value;
                   },
                 ),
-                if (_authMode == AuthMode.Signup)
-                  TextFormField(
-                    enabled: _authMode == AuthMode.Signup,
-                    decoration: InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-                    // validator: _authMode == AuthMode.Signup
-                    //     ? (value) {
-                    //         if (value != _passwordController.text) {
-                    //           return 'Passwords do not match!';
-                    //         }
-                    //       }
-                    //     : null,
+                AnimatedContainer(
+                  constraints: BoxConstraints(
+                    minHeight: _authMode == AuthMode.Signup ? 60 : 0,
+                    maxHeight: _authMode == AuthMode.Signup ? 120 : 0,
                   ),
+                  duration: Duration(milliseconds: 300),
+                  child: FadeTransition(
+                    opacity: _opacityConfrimPassword,
+                    child: SlideTransition(
+                      position: _offsetConfrimPassword,
+                      child: TextFormField(
+                        enabled: _authMode == AuthMode.Signup,
+                        decoration:
+                            InputDecoration(labelText: 'Confirm Password'),
+                        obscureText: true,
+                        // Note: disable validation for testing
+                        // validator: _authMode == AuthMode.Signup
+                        //     ? (value) {
+                        //         if (value != _passwordController.text) {
+                        //           return 'Passwords do not match!';
+                        //         }
+                        //       }
+                        //     : null,
+                      ),
+                    ),
+                  ),
+                ),
                 SizedBox(
                   height: 20,
                 ),
